@@ -46,11 +46,12 @@ Select 50 samples from 1-250,000
  
  ## Efficiency
  Hardware: Xeon 1230 v3 3.3Ghz(4C,8T), 16GB RAM(DDR3-1600)
+ 
  ![img](./imges/table.png)
  
  ![img](./imges/chart.png)
  
- C is much faster than python, specially data is raising fast.Python's multi-threads is significantly better than single thread. However, I don't know why C's multi-threads is almost same as single thread. In multi-threads C, I found CPU usage is lower than 30% for each thread.
+ C is much faster than python, specially data is raising fast.Python's multi-threads is significantly better than single thread. However, I don't know why C's multi-threads is almost same as single thread. In multi-threads C, I found CPU usage is lower than 30% for each thread.Maybe create threads needs time???
  
  ## workload
  
