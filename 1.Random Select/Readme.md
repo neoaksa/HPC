@@ -12,6 +12,7 @@ In this project, I utilized two languages, python and C, to achieve the task wit
 - getRandom: generate 1-D array pointer randomly picked up from 1-n series
 
 *multi-threads*
+
 Both python and C use some way to achieve multi-threads. 
 - parallelly generate 1-D arrays by m threads, each thread creates n/m samples.
 - parallelly random pick up k/m samples in each thread
