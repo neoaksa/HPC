@@ -1,5 +1,5 @@
 # Random select k samples from 1-n
-In this project, I utilized two lauguages, python and C, to achieve the task with single and multi-threads respectively.Python with numpy is a very common method to maniuplate data, C is one of the fastest lauagues. The result shows the gap between them inculding workload and efficiency.
+In this project, I utilized two languages, python and C, to achieve the task with single and multi-threads respectively.Python with numpy is a very common method to manipulate data, C is one of the fastest language. The result shows the gap between them including workload and efficiency.
 
 ## Algorithm
 *Python*: 
@@ -8,8 +8,8 @@ In this project, I utilized two lauguages, python and C, to achieve the task wit
 - sorted: sort
 
 *C*:
-- getSerise: generate 1-D array pionter
-- getRandom: generate 1-D array pionter randomly picked up from 1-n serise
+- getSerise: generate 1-D array pointer
+- getRandom: generate 1-D array pointer randomly picked up from 1-n series
 
 *multi-threads*
 Both python and C use some way to achieve multi-threads. 
@@ -45,4 +45,15 @@ Select 50 samples from 1-250,000
  cost 0.001511 s`
  
  ## Efficiency
+ Hardware: Xeon 1230 v3 3.3Ghz(4C,8T), 16GB RAM(DDR3-1600)
+ ![img](./imges/table.png)
  
+ ![img](./imges/chart.png)
+ 
+ C is much faster than python, specially data is raising fast.Python's multi-threads is significantly better than single thread. However, I don't know why C's multi-threads is almost same as single thread. In multi-threads C, I found CPU usage is lower than 30% for each thread.
+ 
+ ## workload
+ 
+ ![img](./imges/eff.png)
+ 
+ python is much easier coding than C, there are bunch of existing libaries written by cpython we can use.
