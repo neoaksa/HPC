@@ -1,5 +1,5 @@
 # Random select k samples from 1-n
-In this project, I utilized two languages, python and C, to achieve the task with single and multi-threads respectively.Python with numpy is a very common method to manipulate data, C is one of the fastest language. The result shows the gap between them including workload and efficiency.
+In this project, I utilized three languages, python,C and Cuda, to achieve the task with single and multi-threads respectively.Python with numpy is a very common method to manipulate data, C is one of the fastest language in this case, while Cuda is fast when it needs up to thousands threads runing together. The result shows the gap between them including workload and efficiency.
 
 ## Algorithm
 *Python*: 
@@ -17,6 +17,11 @@ Both python and C use some way to achieve multi-threads.
 - parallelly generate 1-D arrays by m threads, each thread creates n/m samples.
 - parallelly random pick up k/m samples in each thread
 - group all randomly selected samples together
+
+Cuda uses a different algorithm:
+- Each thread would only generate one random number from range of between `min` and `max`
+- In each tread, `min` = block_id*THREAD_NUM+thread_id*((int)(N_NUM/K_NUM))+1, `max`=`min`+ thread_id*((int)(N_NUM/K_NUM))
+- In this case, I used 1 block with 50 threads
 
 ## Result
 Select 50 samples from 1-250,000 
@@ -44,6 +49,11 @@ Select 50 samples from 1-250,000
  
  `Output:1705 1757 5257 14592 18356 24935 28107 28507 37510 39263 61017 61848 63287 66684 79270 81748 82427 85668 86908 92234 102651 108063 110278 117535 121519 126369 131718 135699 146891 149128 153796 154356 156780 168388 174234 179515 185213 186723 192180 198538 200356 205078 206718 208654 210269 214148 219298 220688 224290 230998 
  cost 0.001511 s`
+ 
+ 5. 50 threads by Cuda
+`CUDA initialized.
+2847 5808 12004 17058 22938 29521 30066 38664 44659 48708 50076 59237 60336 66533 72737 77490 83515 87284 94149 96568 100110 106591 113037 115364 123924 129273 133965 138177 140657 146243 154790 156830 164384 168624 173876 177182 184547 186616 194136 199160 200363 205504 212520 219315 220472 225236 232853 236562 242065 247369 
+ Spend: 0.062560 s`
  
  ## Efficiency
  Hardware: Xeon 1230 v3 3.3Ghz(4C,8T), 16GB RAM(DDR3-1600)
