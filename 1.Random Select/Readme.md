@@ -19,7 +19,7 @@ Both python and C use some way to achieve multi-threads.
 - group all randomly selected samples together
 
 Cuda uses a different algorithm:
-- Each thread would only generate one random number from range of between `min` and `max`
+- Each thread would only generate one random number from range of `min` and `max`
 - In each tread, `min` = block_id*THREAD_NUM+thread_id*((int)(N_NUM/K_NUM))+1, `max`=`min`+ thread_id*((int)(N_NUM/K_NUM))
 - In this case, I used 1 block with 50 threads
 
