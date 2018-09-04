@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 #include <time.h>
 
-#define DATA_SIZE 25000000
+#define DATA_SIZE 250000
 #define KSELECT 50
 #define BLOCK_NUM 1
 #define THREAD_NUM 50
@@ -57,17 +57,15 @@ int main()
 	clock_t begin = clock();
 	cudaMalloc((void**) &result, sizeof(int) * KSELECT);
 	randomSelect<<<BLOCK_NUM, THREAD_NUM,0>>>(result);
-	int result_host[BLOCK_NUM];
+	int result_host[KSELECT];
 	cudaMemcpy(&result_host, result, sizeof(int) * KSELECT,cudaMemcpyDeviceToHost);
 	cudaFree(result);
 	clock_t end = clock();
+	for(int i = 0; i < KSELECT; i++) {
+		printf("%d ",result_host[i]);
+	}
 	// count time
 	double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 	printf("\n Spend: %f s",time_spent);
-	for(int i = 0; i < KSELECT; i++) {
-		printf("%d - %d\n",i,result_host[i]);
-	}
-
 	return 0;
 }
- 
