@@ -63,7 +63,7 @@ Select 50 samples from 1-250,000
  
  ![img](./imges/chart.png)
  
- C is much faster than python, specially data is raising fast.Python's multi-threads is significantly better than single thread. However, I don't know why C's multi-threads is almost same as single thread. In multi-threads C, I found CPU usage is lower than 30% for each thread.Perhaps create threads takes time. As to Cuda, in this case, nomatter how data size raising, the time didn't change much, although in the small data size, it didn't run very fast. 
+ C is much faster than python, specially when data is raising fast.Python's multi-threads is significantly better than single thread. However, I don't know why C's multi-threads is almost as same as the single thread. In multi-threads C, I found CPU usage is lower than 30% for each thread.Perhaps create threads takes time. As to Cuda, in this case, nomatter how data size raising, the time didn't change much, although in the small data size, it didn't run very fast compared with C. 
  
  ## workload
  
