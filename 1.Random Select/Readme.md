@@ -57,7 +57,7 @@ Select 50 samples from 1-250,000
  Spend: 0.062560 s`
  
  ## Efficiency
- Hardware: Xeon 1230 v3 3.3Ghz(4C,8T), 16GB RAM(DDR3-1600)
+ Hardware: Xeon 1230 v3 3.3Ghz(4C,8T), 16GB RAM(DDR3-1600), GTX950(2GB RAM)
  
  ![img](./imges/table.png)
  
