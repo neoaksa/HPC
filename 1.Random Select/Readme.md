@@ -71,5 +71,5 @@ Select 50 samples from 1-250,000
  
  python is much easier coding than C, there are bunch of existing libaries written by cython we can use.
  
- ## Prolbem
+ ## Problem
  How to split the data and balance threads is a problem in this case. If N is not divisible by thread number, there will be an issue to generate randomly numbers in each thread since the probability in different threads is not equal.
