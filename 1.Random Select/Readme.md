@@ -63,7 +63,7 @@ Select 50 samples from 1-250,000
  
  ![img](./imges/chart.png)
  
- C is much faster than python, specially when data is raising fast.Python's multi-threads is significantly better than single thread. However, I don't know why C's multi-threads is almost as same as the single thread. In multi-threads C, I found CPU usage is lower than 30% for each thread.Perhaps create threads takes time. As to Cuda, in this case, nomatter how data size raising, the time didn't change much, although in the small data size, it didn't run very fast compared with C. 
+ C is much faster than python, specially when data is raising fast.Python's multi-threads is significantly better than single thread. <del>However, I don't know why C's multi-threads is almost as same as the single thread.In multi-threads C, I found CPU usage is lower than 30% for each thread.Perhaps create threads takes time.</del> Since I used `clock` object in C to calc time costing, it got the user time rather than cpu time.(real < user when parallely running). If we want to get real time, we should use `clock_gettime(CLOCK_MONOTONIC, &start);`[Credit: [Dr.Greg Wolffe] ]. As to Cuda, in this case, nomatter how data size raising, the time didn't change much, although in the small data size, it didn't run very fast compared with C. 
  
  ## workload
  
@@ -72,4 +72,4 @@ Select 50 samples from 1-250,000
  python is much easier coding than C, there are bunch of existing libaries written by cython we can use.
  
  ## Problem
- How to split the data and balance threads is a problem in this case. If N is not divisible by thread number, there will be an issue to generate randomly numbers in each thread since the probability in different threads is not equal.
+<del>How to split the data and balance threads is a problem in this case. If N is not divisible by thread number, there will be an issue to generate randomly numbers in each thread since the probability in different threads is not equal.</del> We can use mod to solve this problem. If N%ThreadNumber = M, then we add 1 to each group from M until M=0.[Credit: [Dr.Greg Wolffe] ]
