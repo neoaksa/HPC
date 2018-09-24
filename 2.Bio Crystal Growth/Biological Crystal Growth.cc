@@ -6,14 +6,14 @@ using namespace std;
 
 
 
-#define x 300
-#define y 300
-#define z 300
+#define x 30
+#define y 30
+#define z 30
 // define 3D vector
 typedef vector<int> Dim1;
 typedef vector<Dim1> Dim2;
 typedef vector<Dim2> Dim3;
-int* createParticle(Dim3);
+int* createParticle(Dim3, int);
 bool moveParticles(Dim3&, int*);
 
 int main(int argc, char *argv[])
@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
 	vector<string> points((int)(x*y*z/9)); // save points
 	// total sticked point
 	int total = 1;
+	// radius
+	int radius = 0;
 	// set orignal point in the central
 	lattice[(int)(x/2)][(int)(y/2)][(int)(z/2)] = 1;
 	// set max threads
@@ -30,9 +32,9 @@ int main(int argc, char *argv[])
 	
 	#pragma omp parallel
 	{
-		while(total < (int)(x*y*z/10)){
+		while(total < (int)(x*y*z/100)){
 			//create a particle
-			int *point = createParticle(lattice);
+			int *point = createParticle(lattice,radius);
 			//move particle
 			if(moveParticles(lattice, point)){
 				#pragma omp critical
@@ -40,6 +42,12 @@ int main(int argc, char *argv[])
 					total++;
 					//~ cout << point[0] << "|" << point[1] << "|" << point[2] << endl;
 					lattice[point[0]][point[1]][point[2]] = 1;
+					// add radius if possible
+					if(radius < (int)(x/2)-1){
+						if(abs(point[0]-(int)(x/2))>radius || abs(point[1]-(int)(y/2))>radius || abs(point[2]-(int)(z/2))>radius){
+							radius++;
+						}
+					}
 					points.push_back(std::to_string(point[0])+","+std::to_string(point[1])+","+std::to_string(point[2])+",\n");
 					//~ cout << total << endl;
 				}
@@ -57,17 +65,23 @@ int main(int argc, char *argv[])
 }
 
 // create a particle
-int* createParticle(Dim3 lattice)
+int* createParticle(Dim3 lattice, int radius)
 {
 	// flag for exiting point 
 	bool flag = true;
 
 	while(flag){
 		//create a random position
-		int new_x = rand()%(x);
-		int new_y = rand()%(y);
-		int new_z = rand()%(z);
-
+		//~ cout << radius << endl;
+		int new_x_E1 = rand()%(x-((int)(x/2)+radius))+((int)(x/2)+(radius));
+		int new_x_E2 = rand()%((int)(x/2)-(radius));
+		int new_x = (rand() > RAND_MAX/2) ? new_x_E1 : new_x_E2;
+		int new_y_E1 = rand()%(y-((int)(y/2)+radius))+((int)(y/2)+(radius));
+		int new_y_E2 = rand()%((int)(y/2)-(radius));
+		int new_y = (rand() > RAND_MAX/2) ? new_y_E1 : new_y_E2;
+		int new_z_E1 = rand()%(z-((int)(z/2)+radius))+((int)(z/2)+(radius));
+		int new_z_E2 = rand()%((int)(z/2)-(radius));
+		int new_z = (rand() > RAND_MAX/2) ? new_z_E1 : new_z_E2;
 		//check if exit
 		if(lattice[new_x][new_y][new_z] == 0 ){
 			flag = false;
@@ -75,6 +89,7 @@ int* createParticle(Dim3 lattice)
 			return point;
 		}
 	}
+	
 	return NULL;
 }
 
