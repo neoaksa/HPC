@@ -2,13 +2,17 @@
 #include <fstream>
 #include <omp.h>
 #include <vector>
+#include <sys/time.h>
+
 using namespace std;
 
+#define x 50
+#define y 50
+#define z 50
+#define MAXSIZE x*y*z/200 //HOW MANY PATICLES
+#define MAXRADIUS (int)(x/3)-1 //THE MAX RADIUS
+#define THREADNUM 8
 
-
-#define x 30
-#define y 30
-#define z 30
 // define 3D vector
 typedef vector<int> Dim1;
 typedef vector<Dim1> Dim2;
@@ -28,22 +32,29 @@ int main(int argc, char *argv[])
 	// set orignal point in the central
 	lattice[(int)(x/2)][(int)(y/2)][(int)(z/2)] = 1;
 	// set max threads
-	omp_set_num_threads (8);
+	omp_set_num_threads (THREADNUM);
+	//timing 
+	struct timeval start, finish;
+
+	// timing start
+	gettimeofday (&start, NULL);
 	
-	#pragma omp parallel
+	int* point;
+	#pragma omp parallel private(point)
 	{
-		while(total < (int)(x*y*z/100)){
+		while(total < (int)(MAXSIZE)){
 			//create a particle
-			int *point = createParticle(lattice,radius);
+			point = createParticle(lattice,radius);
 			//move particle
 			if(moveParticles(lattice, point)){
 				#pragma omp critical
 				{
 					total++;
 					//~ cout << point[0] << "|" << point[1] << "|" << point[2] << endl;
+					//~ cout << total << endl;
 					lattice[point[0]][point[1]][point[2]] = 1;
 					// add radius if possible
-					if(radius < (int)(x/2)-1){
+					if(radius < MAXRADIUS){
 						if(abs(point[0]-(int)(x/2))>radius || abs(point[1]-(int)(y/2))>radius || abs(point[2]-(int)(z/2))>radius){
 							radius++;
 						}
@@ -54,6 +65,11 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	//timing end
+	gettimeofday (&finish, NULL);
+	double elapsed = (finish.tv_sec - start.tv_sec) * 1000;
+	elapsed += (finish.tv_usec - start.tv_usec) / 1000;
+	cout << "Time: " << elapsed << " msec." << endl;
 	// export array
 	ofstream myfile;
 	myfile.open ("crystal.csv");
@@ -131,3 +147,7 @@ bool moveParticles(Dim3& lattice, int* point)
 		}
 	}
 }
+//202981 msec
+//371012 msec
+//2244 msec  x/4 radius
+//8839 msec 1
