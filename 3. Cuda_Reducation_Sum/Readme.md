@@ -10,6 +10,19 @@ CPU version(E3-1230 v3 3.3GHz)
 
 `CPU.cc`: single thread running on cpu for evaluation
 
+### Strategy
+
+1. fully utilization of each thread in GPU
+2. reduce I/O time by shared memeory in each block
+
+### Method
+
+1. generate product two vectors by kernel
+2. Using Sequential Addressing to sum up the products
+3. Unroll the Last Warp
+4. Unroll the a fixed block size
+5. Multiple Adds(didn't work in this case)
+
 ### Performance analysis
 
 1. Speed up
