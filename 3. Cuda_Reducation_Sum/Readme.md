@@ -19,8 +19,8 @@ CPU version(E3-1230 v3 3.3GHz)
 
 1. generate product two vectors by kernel
 2. Using Sequential Addressing to sum up the products
-3. Unroll the Last Warp
-4. Unroll the a fixed block size
+3. Unroll the Last Warp, since we don't need syncthreads in a warp.
+4. Unroll the a fixed block size.
 5. Multiple Adds(didn't work in this case)
 
 ### Performance analysis
