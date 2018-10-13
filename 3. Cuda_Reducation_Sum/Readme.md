@@ -1,12 +1,17 @@
 ### Reduction Sum
+
 Cuda version(GTX950 128bit 6600Mhz):
+
 `workperform.cc`: main function which invokes `innerproduct` in cuda file.
+
 `workperform.cu`: cuda file, inculds reduction sum function.
 
 CPU version(E3-1230 v3 3.3GHz)
+
 `CPU.cc`: single thread running on cpu for evaluation
 
 ### Performance analysis
+
 1. Speed up
 
 ![img](imgs/chart.png)
