@@ -16,7 +16,7 @@
 
 1. fully utilization of each thread in GPU
 2. reduce I/O time by shared memeory in each block
-3. 2GB can store 2^30*\8/block_size data
+3. 2GB can store 2^30\*8/block_size data
 
 ### Method <sup>[1]</sup>
 
