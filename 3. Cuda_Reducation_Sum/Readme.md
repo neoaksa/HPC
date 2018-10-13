@@ -15,7 +15,7 @@ CPU version(E3-1230 v3 3.3GHz)
 1. fully utilization of each thread in GPU
 2. reduce I/O time by shared memeory in each block
 
-### Method[1]
+### Method <sup>[1]</sup>
 
 1. generate product two vectors by kernel
 2. Using Sequential Addressing to sum up the products
