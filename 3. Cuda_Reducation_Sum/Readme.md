@@ -49,7 +49,7 @@ E = 47.64/105.6=46%
 
 3. Issue
 
-It only used half threads in a block. but if I changed it to multi-add when generating products of two vectors, it became slower, I guess "%" or "if else" slowed the performance. 
+It only used half threads in a block. but if I changed it to multi-add when generating products of two vectors, it became slower instead, I guess "%" or "if else" slowed the performance. 
 
 > Reference:  
 > [1] "Optimizing Parallel Reduction in CUDA" by Mark Harris
