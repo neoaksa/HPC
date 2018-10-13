@@ -15,7 +15,7 @@ CPU version(E3-1230 v3 3.3GHz)
 1. fully utilization of each thread in GPU
 2. reduce I/O time by shared memeory in each block
 
-### Method
+### Method[1]
 
 1. generate product two vectors by kernel
 2. Using Sequential Addressing to sum up the products
@@ -47,4 +47,5 @@ Max Bandwidth=105.6GB/s
 
 E = 47.64/105.6=46%
 
-> Reference:  "Optimizing Parallel Reduction in CUDA" by Mark Harris
+> Reference:  
+> [1] "Optimizing Parallel Reduction in CUDA" by Mark Harris
