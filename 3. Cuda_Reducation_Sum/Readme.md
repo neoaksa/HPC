@@ -1,24 +1,27 @@
-### Reduction Sum
+## Reduction Sum
 
-Cuda version(GTX950 128bit 6600Mhz):
+### Two versions
+
+- Cuda version(GTX950 128bit 6600Mhz 2GB):
 
 `workperform.cc`: main function which invokes `innerproduct` in cuda file.
 
-`workperform.cu`: cuda file, inculds reduction sum function.
+`workperform.cu`: cuda file, inculds reduction sum function. 
 
-CPU version(E3-1230 v3 3.3GHz)
+- CPU version(E3-1230 v3 3.3GHz)
 
-`CPU.cc`: single thread running on cpu for evaluation
+`CPU.cc`: single thread running on cpu for evaluation, which needs at least 8.5GB for allocating 2^30 unsigned longlong data.
 
 ### Strategy
 
 1. fully utilization of each thread in GPU
 2. reduce I/O time by shared memeory in each block
+3. 2GB can store 2^30*\8/block_size data
 
 ### Method <sup>[1]</sup>
 
 1. generate product two vectors by kernel
-2. Using Sequential Addressing to sum up the products
+2. Using Sequential Addressing to sum up the products. 
 3. Unroll the Last Warp, since we don't need syncthreads in a warp.
 4. Unroll the a fixed block size.
 5. Multiple Adds(didn't work in this case)
