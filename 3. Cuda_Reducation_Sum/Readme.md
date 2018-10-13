@@ -46,3 +46,5 @@ Actual Bandwidth = 2^30\*8/1000/1000/180.244=47.64GB/s
 Max Bandwidth=105.6GB/s
 
 E = 47.64/105.6=46%
+
+> Reference:  "Optimizing Parallel Reduction in CUDA" by Mark Harris
