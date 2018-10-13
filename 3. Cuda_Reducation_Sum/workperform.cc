@@ -13,7 +13,7 @@
 #include <sys/time.h>
 #include <cstdlib>
 
-#define BLOCK_SIZE 512
+#define BLOCK_SIZE 128
 //~ #define VECSIZE 1 << 10
 
 // The function innerproduct is in the file blockAndThread.cu

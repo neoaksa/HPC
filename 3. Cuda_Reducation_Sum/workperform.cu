@@ -29,13 +29,28 @@ __global__ void cu_vector_dot (unsigned long long *output_d, unsigned long  vecS
     unsigned int tid = threadIdx.x;
     unsigned int bid = blockIdx.x;
     unsigned long  gid = bid*block_Size+tid;
+    //~ unsigned long  gid = bid*block_Size*2+tid;
+    //~ unsigned int gridSize = block_Size*2*gridDim.x;
     vec[tid] = 0;
-    if(gid< vecSize/2){
-		vec[tid] = (gid+1)*(gid%10+1);
-	}
-	else{
-		vec[tid] = (gid+2*(vecSize/2-gid))*(gid%10+1);
-	}
+    //~ while (gid < vecSize) { 
+		//~ if(gid< vecSize/2 && (gid+block_Size)<vecSize/2){
+			//~ vec[tid] += (gid+1)*(gid%10+1)+(gid+block_Size+1)*((gid+block_Size)%10+1);
+		//~ }
+		//~ else if(gid< vecSize/2 && (gid+block_Size)>vecSize/2){
+			//~ vec[tid] += (gid+1)*(gid%10+1)+(gid+block_Size+2*(vecSize/2-(gid+block_Size)))*((gid+block_Size)%10+1);
+		//~ }
+		//~ else{
+			//~ vec[tid] += (gid+2*(vecSize/2-gid))*(gid%10+1)+(gid+block_Size+2*(vecSize/2-(gid+block_Size)))*((gid+block_Size)%10+1);
+		//~ }
+		//~ gid += gridSize;
+	//~ }
+	 if(gid< vecSize/2){
+			vec[tid] = (gid+1)*(gid%10+1);
+		}
+		else{
+			vec[tid] = (gid+2*(vecSize/2-gid))*(gid%10+1);
+		}
+
 	 __syncthreads();
 	//unroll the iterative
 	if (block_Size >= 512) {
