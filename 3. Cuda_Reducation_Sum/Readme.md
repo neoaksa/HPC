@@ -21,4 +21,7 @@ When data size is relatively small, CPU is running faster than GPU, since there 
 
 2. Bandwidth Utility
 Actual Bandwidth = 2^30\*4/1000/1000/180.244=23.82GB/s
-Max Bandwidth=128\*2\*6600/8/1000=211GB/s
+
+Max Bandwidth=105.6GB/s
+
+E = 23.82/105.6=23%
