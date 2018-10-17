@@ -20,7 +20,7 @@
 
 ### Method <sup>[1]</sup>
 
-1. generate product two vectors by kernel
+1. generate product of two vectors at once by kernel
 2. Using Sequential Addressing to sum up the products. 
 3. Unroll the Last Warp, since we don't need syncthreads in a warp.
 4. Unroll the a fixed block size.
