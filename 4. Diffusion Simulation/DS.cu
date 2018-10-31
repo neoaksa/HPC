@@ -25,9 +25,9 @@
 
 // device function to set the 3D volume
 __global__ void diffusion(unsigned int *init_pos, float (*output_array)[DATAYSIZE][DATAXSIZE],
-                          float (*shadow_array)[DATAYSIZE][DATAXSIZE], float con_begin, int *barrier, int *barrierOut)
+                          float (*shadow_array)[DATAYSIZE][DATAXSIZE], float con_begin, int *barrier, int signal)
 {   
-//     // get grid, only works on new GPU
+//     // get grid, only works on GTX 1000 up
 //     grid_group g = this_grid();
     // get position
     unsigned idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -75,30 +75,30 @@ __global__ void diffusion(unsigned int *init_pos, float (*output_array)[DATAYSIZ
                 while(barrier[tid_in_block]!=1);//{printf("%d-%d \n",bid,tid_in_block);};
             }
             __syncthreads();
-            if(tid_in_block < blockNum){
-                barrierOut[tid_in_block]=1;
-            }  
+            // ready to refresh array
+            if(tid_in_block == 0)
+                signal=1; 
         }
-        //all other threads check barrierOut
+        //all other threads wait for the signal
         if(tid_in_block==0){
-            while(barrierOut[bid]!=1){printf("%d-%d \n",tid_in_block,bid);};
+            while(signal!=1);//{printf("%d-%d \n",tid_in_block,bid);};
         }
         __syncthreads();
-        // updae shadow and reset barrier 
+        // updae shadow and reset barrier/signal
         shadow_array[idz][idy][idx] = output_array[idz][idy][idx];
         if(bid==1){
             if(tid_in_block < blockNum){
                 barrier[tid_in_block]=0;
-                barrierOut[tid_in_block]=0;
             }
             __syncthreads();
+            if(tid_in_block == 0)
+                signal=0; 
         }
-        else{
-            if(tid_in_block==0){    
-                while(barrierOut[bid]!=0);
-            }
-            __syncthreads();
+        if(tid_in_block==0){    
+            while(signal!=0);
         }
+        __syncthreads();
+        
     }
 }
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     nRarray *output_d;  // storage for result computed on device
     nRarray *shadow_d; // shadow array for saving temp value
     int *barrier; // array for sync blocks
-    int *barrierOut; // array for sync blocks(stop)
+    int signal=0; // array for sync blocks(stop)
     // allocate storage for receiving output
     if ((output_c = (nRarray *)malloc((nx*ny*nz)*sizeof(float))) == 0) {
 		fprintf(stderr,"malloc1 Fail \n"); return 1;
@@ -153,11 +153,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, ("Failed to allocate device buffer-barrier"));
 		exit(1);
 	}
-	result = cudaMalloc((void **) &barrierOut, ((int)(DATAXSIZE*DATAYSIZE*DATAZSIZE)/(int)(BLKXSIZE*BLKYSIZE*BLKZSIZE))*sizeof(int));
-    if (result != cudaSuccess) {
-		fprintf(stderr, ("Failed to allocate device buffer-barrierOut"));
-		exit(1);
-	}
 	// copy host to device
 	result = cudaMemcpy(inital_d, init_position, ((6)*sizeof(float)), cudaMemcpyHostToDevice);
 	if (result != cudaSuccess) {
@@ -168,7 +163,7 @@ int main(int argc, char *argv[])
     const dim3 blockSize(BLKXSIZE, BLKYSIZE, BLKZSIZE);
     const dim3 gridSize((DATAXSIZE/BLKXSIZE), (DATAYSIZE/BLKYSIZE), (DATAZSIZE/BLKZSIZE));
     
-    diffusion<<<gridSize,blockSize>>>(inital_d,output_d,shadow_d,con_begin,barrier,barrierOut);
+    diffusion<<<gridSize,blockSize>>>(inital_d,output_d,shadow_d,con_begin,barrier,signal);
     // copy output data back to host
     result = cudaMemcpy(output_c, output_d, ((int)(nx*ny*nz)*sizeof(float)), cudaMemcpyDeviceToHost);
     if (result != cudaSuccess) {
@@ -205,11 +200,6 @@ int main(int argc, char *argv[])
 		result = cudaFree(barrier);
     if (result != cudaSuccess) {
 		fprintf(stderr, ("Failed to Free device buffer - barrier"));
-		exit(1);
-	}
-		result = cudaFree(barrierOut);
-    if (result != cudaSuccess) {
-		fprintf(stderr, ("Failed to Free device buffer - barrierOut"));
 		exit(1);
 	}
     return 0;
