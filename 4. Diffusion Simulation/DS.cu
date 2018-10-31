@@ -20,7 +20,7 @@
 #define BLKYSIZE 8
 #define BLKZSIZE 8
 //time iteration
-#define t 1
+#define t 10
 
 
 // device function to set the 3D volume
@@ -98,7 +98,7 @@ __global__ void diffusion(unsigned int *init_pos, float (*output_array)[DATAYSIZ
             while(signal!=0);
         }
         __syncthreads();
-        
+//         
     }
 }
 
