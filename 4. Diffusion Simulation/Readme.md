@@ -16,7 +16,16 @@ Since 3D object is hard to observe from outside, I choose the central slice whic
 
 ![img](img/visualDS.png)
 
-As time goes by, the pollution starts to fill the whole space. Also the concetration of each postion trends to even. When dt=5000 or 10000, the shape of concetration is not a symmetrical structure anymore although the difference between maximum and minimun is very tiny. I think the possible reason is the start point is not the central of space.
+`Figure[1-1]: srouce point = [x:32][y:32][z:32], slice Z=32`
+
+As time goes by, the pollution starts to fill the whole space. Also the concetration of each postion trends to even. When dt=5000 or 10000, the shape of concetration is not a symmetrical structure anymore although the difference between maximum and minimun is very tiny. I think the possible reason is the start point is not the central of space, it is faster to reach one side than anther.
+
+Then I changed the source of pollustion to [x:0][y:0][z:0], keep slice Z=32. The surface plot can be found blew:
+![img](img/visualDS2.png)
+
+`Figure[1-2]: srouce point = [x:0][y:0][z:0], slice Z=32`
+
+The last two plots are almost as same as Figure[1-1].
 
 ## Speed up
 Compared with CPU version, the GPU version running signifately faster which can reach up to 34x ~ 39x acclatation.
