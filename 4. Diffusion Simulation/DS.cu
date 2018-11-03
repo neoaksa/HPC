@@ -7,18 +7,18 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-
+#include <sys/time.h>
 // set a 3D volume
 //define the data set size (cubic volume)
-#define DATAXSIZE 128
-#define DATAYSIZE 128
-#define DATAZSIZE 128
+#define DATAXSIZE 64
+#define DATAYSIZE 64
+#define DATAZSIZE 64
 //block size = 8*8*8 = 512
 #define BLKXSIZE 8
 #define BLKYSIZE 8
 #define BLKZSIZE 8
 //time iteration
-#define t 10
+#define t 10000
 
 
 // device function to set the 3D volume
@@ -32,8 +32,7 @@ __global__ void diffusion(float (*output_array)[DATAYSIZE][DATAXSIZE],
     unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;
     unsigned int idz = blockIdx.z*blockDim.z + threadIdx.z;
     
-    
-
+    // not the edge
     if(idx>0 && idx<DATAXSIZE-1 && idy>0 && idy<DATAYSIZE-1 && idz>0 && idz<DATAZSIZE-1){
         output_array[idz][idy][idx] = (shadow_array[idz][idy][idx-1] + shadow_array[idz][idy][idx+1]
                                     + shadow_array[idz][idy-1][idx] + shadow_array[idz][idy+1][idx]
@@ -41,7 +40,13 @@ __global__ void diffusion(float (*output_array)[DATAYSIZE][DATAXSIZE],
     }
     // reach to the edge to rebound
     else{
-        
+        int nbr = 6;
+        if(idx==0 || idx==DATAXSIZE-1) nbr-=1;
+        if(idy==0 || idy==DATAYSIZE-1) nbr-=1;
+        if(idz==0 || idz==DATAZSIZE-1) nbr-=1;
+        output_array[idz][idy][idx] = (((idx==0)? 0:shadow_array[idz][idy][idx-1]) + ((idx==(DATAXSIZE-1))? 0: shadow_array[idz][idy][idx+1])
+                                    + ((idy==0)? 0:shadow_array[idz][idy-1][idx]) + ((idy==(DATAYSIZE-1))? 0: shadow_array[idz][idy+1][idx])
+                                    + ((idz==0)? 0:shadow_array[idz-1][idy][idx])+ ((idz==(DATAZSIZE-1))? 0: shadow_array[idz+1][idy][idx]))/nbr;
     }
 }
 
@@ -71,7 +76,14 @@ void diffusion_cpu(float (*output_array)[DATAYSIZE][DATAXSIZE],
                     }
                     // reach to the edge to rebound
                     else{
-                        
+                        int nbr = 6;
+                        if(idx==0 || idx==DATAXSIZE-1) nbr-=1;
+                        if(idy==0 || idy==DATAYSIZE-1) nbr-=1;
+                        if(idz==0 || idz==DATAZSIZE-1) nbr-=1;
+                        output_array[idz][idy][idx] = (((idx==0)? 0:shadow_array[idz][idy][idx-1]) + ((idx==(DATAXSIZE-1))? 0: shadow_array[idz][idy][idx+1])
+                                                    + ((idy==0)? 0:shadow_array[idz][idy-1][idx]) + ((idy==(DATAYSIZE-1))? 0: shadow_array[idz][idy+1][idx])
+                                                    + ((idz==0)? 0:shadow_array[idz-1][idy][idx])+ ((idz==(DATAZSIZE-1))? 0: shadow_array[idz+1][idy][idx]))/nbr;
+//                         printf("%d,%d,%d-%f \n", idz,idy,idx, output_array[idz][idy][idx]);
                     }
                 }
         // updae shadow and reset barrier/signal
@@ -101,8 +113,8 @@ int main(int argc, char *argv[])
     init_pos[4] 	= DATAXSIZE/2 - 2;// z min
     init_pos[5] 	= DATAXSIZE/2 + 2;// z max
     //initial concetration
-    const float con_begin = 200.0;
-
+    const float con_begin = 20000.0;
+    
     // pointers for data set storage via malloc
     nRarray *output_c; // storage for result stored on host
     nRarray *output_d; // storage for result computed on device
@@ -156,6 +168,12 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "cudaMemcpy host->dev (block) failed.");
 		exit(1);
 	}
+	
+    //timing 
+	struct timeval start_cpu, finish_cpu,start_gpu, finish_gpu;
+	// timing start
+	gettimeofday (&start_gpu, NULL);
+    
     // compute result
     const dim3 blockSize(BLKXSIZE, BLKYSIZE, BLKZSIZE);
     const dim3 gridSize((DATAXSIZE/BLKXSIZE), (DATAYSIZE/BLKYSIZE), (DATAZSIZE/BLKZSIZE));
@@ -171,8 +189,18 @@ int main(int argc, char *argv[])
 		fprintf(stderr, ("cudaMemcpy dev (block)->host failed."));
 		exit(1);
 	}
+    //timing end
+	gettimeofday (&finish_gpu, NULL);
+	double elapsed_gpu = (finish_gpu.tv_sec - start_gpu.tv_sec)*1000000 + finish_gpu.tv_usec - start_gpu.tv_usec;
+    
+    // timing start
+	gettimeofday (&start_cpu, NULL);
     //cpu version
     diffusion_cpu(output_cpu,shadow_cpu);
+    //timing end
+	gettimeofday (&finish_cpu, NULL);
+	double elapsed_cpu = (finish_cpu.tv_sec - start_cpu.tv_sec)*1000000 + finish_cpu.tv_usec - start_cpu.tv_usec;   
+    
     //check two version
     for (unsigned i=0; i<nz; i++)
       for (unsigned j=0; j<ny; j++)
@@ -185,14 +213,20 @@ int main(int argc, char *argv[])
                 
             }
         }
+    
+    	
+	printf("Time spent(GPU) of dt = %d: %f \n",t,elapsed_gpu);	
+	printf("Time spent(CPU) of dt = %d: %f \n",t,elapsed_cpu);
 
     //write result to file
 	std::ofstream myfile;
-	myfile.open ("DS.csv");
+	myfile.open ("DS-2.csv",std::ios_base::app);
+//     myfile.open ("DS.csv");
     for (unsigned i=0; i<nz; i++)
       for (unsigned j=0; j<ny; j++)
         for (unsigned k=0; k<nx; k++){
-            myfile << i << "," << j << "," << k << "," << output_c[i][j][k] << std::endl;
+            if( output_c[i][j][k]!=0)
+            myfile << i << "," << j << "," << k << "," << output_c[i][j][k] << "," << std::to_string(t) << std::endl;
         }
 	myfile.close();
 	// free memory
