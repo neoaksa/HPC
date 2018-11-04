@@ -3,7 +3,7 @@
 1. A 3D space created with size of 64\*64\*64
 2. There is not any other object in the space, as the pollution reaches to the edge of space, it will rebound
 3. The source of pollution can be a block or a point. By default, it is a point(value=20000) in the position [x:32]-[y:32]-[z:32].
-4. Let dt=1 , dx=1 , dy=1, dz=1, so that U(t+1) = (U(t)[x+1][y][z]+U(t)[x-1][y][z]+U(t)[x][y+1][z]+U(t)[x][y-1][z]+U(t)[x][y][z+1]+U(t)[x][y][z-1])/6
+4. Let dt=1 , dx=1 , dy=1, dz=1, so that <a href="https://www.codecogs.com/eqnedit.php?latex=U_{x,y,z}(t&plus;1)&space;=&space;\frac{U_{x&plus;1,y,z}(t)&plus;U_{x-1,y,z}(t)&plus;U_{x,y&plus;1,z}(t)&plus;U_{x,y-1,z}(t)&plus;U_{x,y,z&plus;1}(t)&plus;U_{x,y,z-1}(t)}{6}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?U_{x,y,z}(t&plus;1)&space;=&space;\frac{U_{x&plus;1,y,z}(t)&plus;U_{x-1,y,z}(t)&plus;U_{x,y&plus;1,z}(t)&plus;U_{x,y-1,z}(t)&plus;U_{x,y,z&plus;1}(t)&plus;U_{x,y,z-1}(t)}{6}" title="U_{x,y,z}(t+1) = \frac{U_{x+1,y,z}(t)+U_{x-1,y,z}(t)+U_{x,y+1,z}(t)+U_{x,y-1,z}(t)+U_{x,y,z+1}(t)+U_{x,y,z-1}(t)}{6}" /></a>
 
 ## Stretage
 1. Create two kernel functions: `diffusion` and `refresh`. `Diffusion` is used to calculate U(t+1) in term of U(t). `Refresh` is used to update the value in the space after calculation step. 
