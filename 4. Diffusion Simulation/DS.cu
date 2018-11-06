@@ -10,16 +10,19 @@
 #include <sys/time.h>
 // set a 3D volume
 //define the data set size (cubic volume)
-#define DATAXSIZE 64
-#define DATAYSIZE 64
-#define DATAZSIZE 64
+#define DATAXSIZE 128
+#define DATAYSIZE 128
+#define DATAZSIZE 128
 //block size = 8*8*8 = 512
 #define BLKXSIZE 8
 #define BLKYSIZE 8
 #define BLKZSIZE 8
 //time iteration
 #define t 10000
-
+//OpenGL version
+#define DIM 128
+//CPU Validation 
+#define CPUV 0
 
 // device function to set the 3D volume
 __global__ void diffusion(float (*output_array)[DATAYSIZE][DATAXSIZE],
@@ -189,35 +192,39 @@ int main(int argc, char *argv[])
 		fprintf(stderr, ("cudaMemcpy dev (block)->host failed."));
 		exit(1);
 	}
-    //timing end
-	gettimeofday (&finish_gpu, NULL);
-	double elapsed_gpu = (finish_gpu.tv_sec - start_gpu.tv_sec)*1000000 + finish_gpu.tv_usec - start_gpu.tv_usec;
-    
-    // timing start
-	gettimeofday (&start_cpu, NULL);
-    //cpu version
-    diffusion_cpu(output_cpu,shadow_cpu);
-    //timing end
-	gettimeofday (&finish_cpu, NULL);
-	double elapsed_cpu = (finish_cpu.tv_sec - start_cpu.tv_sec)*1000000 + finish_cpu.tv_usec - start_cpu.tv_usec;   
-    
-    //check two version
-    for (unsigned i=0; i<nz; i++)
-      for (unsigned j=0; j<ny; j++)
-        for (unsigned k=0; k<nx; k++){
-            if(output_c[i][j][k]!=output_cpu[i][j][k])
-            {
-                printf("check error happen \n");
-                printf("position:[%d][%d][%d]. value:%f:%f \n",i,j,k ,output_c[i][j][k],output_cpu[i][j][k]);
-//                 return 0;
-                
+	
+	
+	//CPU validation is ON/OFF
+	if(CPUV){
+        //timing end
+        gettimeofday (&finish_gpu, NULL);
+        double elapsed_gpu = (finish_gpu.tv_sec - start_gpu.tv_sec)*1000000 + finish_gpu.tv_usec - start_gpu.tv_usec;
+        
+        // timing start
+        gettimeofday (&start_cpu, NULL);
+        //cpu version
+        diffusion_cpu(output_cpu,shadow_cpu);
+        //timing end
+        gettimeofday (&finish_cpu, NULL);
+        double elapsed_cpu = (finish_cpu.tv_sec - start_cpu.tv_sec)*1000000 + finish_cpu.tv_usec - start_cpu.tv_usec;   
+        
+        //check two version
+        for (unsigned i=0; i<nz; i++)
+        for (unsigned j=0; j<ny; j++)
+            for (unsigned k=0; k<nx; k++){
+                if(output_c[i][j][k]!=output_cpu[i][j][k])
+                {
+                    printf("check error happen \n");
+                    printf("position:[%d][%d][%d]. value:%f:%f \n",i,j,k ,output_c[i][j][k],output_cpu[i][j][k]);
+    //                 return 0;
+                    
+                }
             }
-        }
-    
-    	
-	printf("Time spent(GPU) of dt = %d: %f \n",t,elapsed_gpu);	
-	printf("Time spent(CPU) of dt = %d: %f \n",t,elapsed_cpu);
-
+        
+            
+        printf("Time spent(GPU) of dt = %d: %f \n",t,elapsed_gpu);	
+        printf("Time spent(CPU) of dt = %d: %f \n",t,elapsed_cpu);
+    }
     //write result to file
 	std::ofstream myfile;
 	myfile.open ("DS-2.csv",std::ios_base::app);
@@ -245,5 +252,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-
