@@ -41,3 +41,36 @@ Compared with CPU version, the GPU version running significantly faster which ca
 | 3000          | 10716670 | 291210 | 36.80   |
 | 5000          | 17892344 | 452127 | 39.57   |
 | 10000         | 35695658 | 925076 | 38.59   |
+
+## Real-Time Visualization
+To avoid performance analysis, there is a seprated file named `DS-OpenGL.cu` created for real-time visualization. The space size changed to 256\*256\*256 and slice is Z=128. The heatmap samply fellow the rule with only 4 colors:
+```cpp
+ if(output_array[idz][idy][idx]>10){
+                ptr[offset].x = 0;
+                ptr[offset].y = 0;
+                ptr[offset].z = 100;
+                ptr[offset].w = 255;}
+            else if(output_array[idz][idy][idx]>1){
+                ptr[offset].x = 100;
+                ptr[offset].y = 0;
+                ptr[offset].z = 100;
+                ptr[offset].w = 255;
+            }else if(output_array[idz][idy][idx]>0.1){
+                ptr[offset].x = 100;
+                ptr[offset].y = 100;
+                ptr[offset].z = 0;
+                ptr[offset].w = 255;
+            }else if(output_array[idz][idy][idx]>0.01){
+                ptr[offset].x = 50;
+                ptr[offset].y = 50;
+                ptr[offset].z = 50;
+                ptr[offset].w = 255;
+            }
+```
+Here is three screen shots by time = 1000, 6000, 10000
+
+![img](img/Screenshot_20181106_234414.png)
+
+![img](img/Screenshot_20181107_004538.png)
+
+![img](img/Screenshot_20181107_004614.png)
