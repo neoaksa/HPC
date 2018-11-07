@@ -5,7 +5,7 @@
 3. The source of pollution can be a block or a point. By default, it is a point(value=20000) in the position [x:32]-[y:32]-[z:32].
 4. Let dt=1 , dx=1 , dy=1, dz=1, so that <a href="https://www.codecogs.com/eqnedit.php?latex=U_{x,y,z}(t&plus;1)&space;=&space;\frac{U_{x&plus;1,y,z}(t)&plus;U_{x-1,y,z}(t)&plus;U_{x,y&plus;1,z}(t)&plus;U_{x,y-1,z}(t)&plus;U_{x,y,z&plus;1}(t)&plus;U_{x,y,z-1}(t)}{6}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?U_{x,y,z}(t&plus;1)&space;=&space;\frac{U_{x&plus;1,y,z}(t)&plus;U_{x-1,y,z}(t)&plus;U_{x,y&plus;1,z}(t)&plus;U_{x,y-1,z}(t)&plus;U_{x,y,z&plus;1}(t)&plus;U_{x,y,z-1}(t)}{6}" title="U_{x,y,z}(t+1) = \frac{U_{x+1,y,z}(t)+U_{x-1,y,z}(t)+U_{x,y+1,z}(t)+U_{x,y-1,z}(t)+U_{x,y,z+1}(t)+U_{x,y,z-1}(t)}{6}" /></a>
 
-## Stretage
+## Strategy
 1. Create two kernel functions: `diffusion` and `refresh`. `Diffusion` is used to calculate U(t+1) in term of U(t). `Refresh` is used to update the value in the space after calculation step. 
 2. There is a time loop in the host to call `diffusion` and `refresh` in order to achieve global blocks synchronization.
 3. A CPU version `diffusion` function created to validate the result and speed up.
@@ -27,8 +27,8 @@ Then I changed the source of pollution to [x:0][y:0][z:0], keep slice Z=32. The 
 
 The last two plots are almost as same as Figure[1-1].
 
-## Speed up
-Compared with CPU version, the GPU version running significantly faster which can reach up to 34x ~ 39x acceleration.
+## Validation and Performance
+A CPU version created for result validation and performance analysis. The function called `diffusion_cpu`. Compared with CPU version, the GPU version running significantly faster which can reach up to 34x ~ 39x acceleration.
 
 ![img](img/Screenshot_20181103_172839.png)
 
@@ -43,7 +43,7 @@ Compared with CPU version, the GPU version running significantly faster which ca
 | 10000         | 35695658 | 925076 | 38.59   |
 
 ## Real-Time Visualization
-To avoid performance analysis, there is a seprated file named `DS-OpenGL.cu` created for real-time visualization. The space size changed to 256\*256\*256 and slice is Z=128. The heatmap samply fellow the rule with only 4 colors:
+To avoid affect performance analysis, there is a separated file named `DS-OpenGL.cu` created for real-time visualization. The space size changed to 256\*256\*256 and slice is Z=128. The heat-map simply fellow the rule with only 4 colors:
 ```cpp
  if(output_array[idz][idy][idx]>10){
                 ptr[offset].x = 0;
