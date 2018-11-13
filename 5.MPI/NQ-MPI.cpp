@@ -28,7 +28,7 @@ backtracking */
 #include <stdlib.h>
 #include <mpi.h>
 
-#define N 10
+#define N 9
 #define MASTER  0
 #define TAG     0
 
@@ -128,6 +128,15 @@ int solveNQ(int startRow)
   
     return TOTAL; 
 } 
+
+// // check pool empty
+// bool checkPoolEmpty(int *pool){
+//     for(int i=0; i<sizeof(pool)/sizeof(*pool); i++){
+//             if(pool[i]==0)
+//                 return false;
+//     }
+//     return true;
+// }
   
 // driver program to test above function 
 int main(int argc, char* argv[]) 
@@ -137,50 +146,68 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
     
-    //node pool
-    int pool[num_nodes-1] = {0};
-    //2D vector for save solution
-    int node_solution = 0;
-//     MPI_Request rq_send[num_nodes-1];
+
+    //buff save solution
+    int node_solution[num_nodes-1] = {0};
+    MPI_Request rq[num_nodes-1];
 //     MPI_Request rq_rec[num_nodes-1];
     // Master node send the task to idle salve nodes
     if(my_rank==MASTER){
         int total_solution = 0;
         int row = 0;
-
+        int flag[num_nodes-1] = {0}; //async flag
+        int wait[num_nodes-1] = {0}; //Irecv wait flag
+        //node pool
+        int pool[num_nodes-1] = {0};
         //iternate all rows in first column
         while(row<N){
-            //find idle node    
+            //find idle node, send out task
             for(int node=0; node < (num_nodes-1)&&row<N; node++){
                 if(pool[node]==0){
-                    
                     MPI_Send(&row, 1, MPI_INT, node+1, TAG, MPI_COMM_WORLD);
 //                     printf("send row %d by node %d \n",row,node+1);
-                    row++;
                     pool[node]=1;
+                    row++;
                 }
             }
-            //receive result
-            for(int node=0; node < num_nodes-1; node++){
+            //receive result from slave nodes
+            for(int node=0; node < (num_nodes-1); node++){
                 if(pool[node]==1){
-                    MPI_Recv(&node_solution, 1, MPI_INT, node+1, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    //                 printf("rec by node %d - %d \n",node+1,node_solution);
-                    total_solution += node_solution;
-                    pool[node]=0;
+                    if(wait[node]==0){
+                        MPI_Irecv(&node_solution[node], 1, MPI_INT, node+1, TAG, MPI_COMM_WORLD,&rq[node]);
+                        wait[node]=1;
+                    }
+    
+                    MPI_Request_get_status(rq[node],&flag[node],NULL);
+                    if(flag[node]){
+//                         printf("rec by node %d: %d - %d \n",row,node+1,node_solution[node]);
+                        total_solution += node_solution[node];
+                        pool[node]=0;
+                        wait[node]=0;
+                    }
                 }
-            } 
-            
+            }
+            //waiting for last
+            if(row==N){
+                for(int node=0; node < (num_nodes-1); node++){
+                    if(pool[node]==1){
+                        MPI_Wait(&rq[node],NULL);
+                        total_solution += node_solution[node];
+                    }
+                }
+            }
         }
         printf("total solution: %d \n",total_solution);
     }
     // slave nodes handle each row
     else{
+        int startRow;
         while(1){
-            int startRow;
             //receive task from master
             MPI_Recv(&startRow, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            node_solution = solveNQ(startRow); 
-            MPI_Send(&node_solution, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD);
+            node_solution[0] = solveNQ(startRow); 
+            MPI_Isend(&node_solution[0], 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD,&rq[0]);
+            MPI_Wait(&rq[0],NULL); 
         }
     }
     MPI_Finalize();
