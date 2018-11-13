@@ -19,18 +19,16 @@
 // 20:     39029188884      4878666808       1:10:55.48
 // 21:    314666222712     39333324973       9:24:40.50
 
-
-
-/* C/C++ program to solve N Queen Problem using 
-backtracking */
 #include<bits/stdc++.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include <omp.h>
 
-#define N 9
+#define N 8 //lattice size
 #define MASTER  0
 #define TAG     0
+#define THREADNUM 8 //max thread number for a slave node
 
 // solution number
 int TOTAL;  
@@ -104,15 +102,10 @@ bool solveNQUtil(int board[N][N], int col)
     return res; 
 } 
   
-/* This function solves the N Queen problem using 
-Backtracking. It mainly uses solveNQUtil() to 
-solve the problem. It returns false if queens 
-cannot be placed, otherwise return true and 
-prints placement of queens in the form of 1s. 
-Please note that there may be more than one 
-solutions, this function prints one of the 
-feasible solutions.*/
-int solveNQ(int startRow) 
+// find solution
+// @startRow: row number in the first column
+// @sub_row: row number in the second column
+int solveNQ(int startRow, int sub_row) 
 { 
     int board[N][N]; 
     TOTAL = 0;
@@ -120,11 +113,14 @@ int solveNQ(int startRow)
     
     //set startRow strict
     board[startRow][0] = 1;
+    if(isSafe(board,sub_row,1)){
+        board[sub_row][1] = 1;
   
-    if (solveNQUtil(board, 1) == false) 
-    { 
-        printf("Solution does not exist"); 
-    } 
+        if (solveNQUtil(board, 2) == false) 
+        { 
+            printf("Solution does not exist"); 
+        } 
+    }
   
     return TOTAL; 
 } 
@@ -145,7 +141,8 @@ int main(int argc, char* argv[])
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
-    
+    // set max threads
+// 	omp_set_num_threads(THREADNUM);
 
     //buff save solution
     int node_solution[num_nodes-1] = {0};
@@ -170,7 +167,7 @@ int main(int argc, char* argv[])
                     row++;
                 }
             }
-            //receive result from slave nodes
+            //receive result from slave nodes without blocking
             for(int node=0; node < (num_nodes-1); node++){
                 if(pool[node]==1){
                     if(wait[node]==0){
@@ -180,18 +177,19 @@ int main(int argc, char* argv[])
     
                     MPI_Request_get_status(rq[node],&flag[node],NULL);
                     if(flag[node]){
-//                         printf("rec by node %d: %d - %d \n",row,node+1,node_solution[node]);
+                        printf("rec by node %d: %d - %d \n",row,node+1,node_solution[node]);
                         total_solution += node_solution[node];
                         pool[node]=0;
                         wait[node]=0;
                     }
                 }
             }
-            //waiting for last
+            //waiting for all receive process completed
             if(row==N){
                 for(int node=0; node < (num_nodes-1); node++){
                     if(pool[node]==1){
                         MPI_Wait(&rq[node],NULL);
+                        printf("rec by node %d: %d - %d \n",row,node+1,node_solution[node]);
                         total_solution += node_solution[node];
                     }
                 }
@@ -205,7 +203,15 @@ int main(int argc, char* argv[])
         while(1){
             //receive task from master
             MPI_Recv(&startRow, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            node_solution[0] = solveNQ(startRow); 
+//             #pragma omp parallel for schedule(dynamic) private(sub_row) reduction(+:node_solution[0])
+//             {
+//                 for(int sub_row=0;sub_row<N;sub_row++){
+//                     node_solution[0] += solveNQ(startRow,sub_row); 
+//                 }
+//             }
+            for(int sub_row=0;sub_row<N;sub_row++){
+                    node_solution[0] += solveNQ(startRow,sub_row); 
+            }
             MPI_Isend(&node_solution[0], 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD,&rq[0]);
             MPI_Wait(&rq[0],NULL); 
         }
