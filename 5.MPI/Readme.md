@@ -13,7 +13,7 @@ There is a single thread version created named "NQ-Single.cpp". And MPI version 
 ## Complie and running
 ```c++
 complie with openmp: mpic++ -fopenmp NQ-MPI.cpp -o NQ
-run in mpi: mpirun -np 4 --host arch01,arch03,arch04,arch05 ./NQ
+run in mpi: mpirun -np 5 --host arch06,arch07,arch04,arch05,arch08 ./NQ
 set lattice size: #define N 16
 set max threads in each slave node:#define MAXTHREAD 16
 ```
