@@ -27,13 +27,16 @@ backtracking */
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include <omp.h>
 
-#define N 9
+#define N 16
 #define MASTER  0
 #define TAG     0
+#define MAXTHREAD 16
 
-// solution number
-int TOTAL;  
+/*// solution number
+// I dont know why it is not work in Openmp even I set it private.
+int TOTAL;*/  
 
   
 /* A utility function to check if a queen can 
@@ -66,13 +69,13 @@ bool isSafe(int board[N][N], int row, int col)
   
 /* A recursive utility function to solve N 
 Queen problem */
-bool solveNQUtil(int board[N][N], int col) 
+bool solveNQUtil(int board[N][N], int col, int *TOTAL) 
 { 
     /* base case: If all queens are placed 
     then return true */
     if (col == N) 
     { 
-        ++TOTAL;
+        ++*TOTAL;
         return true;
     } 
   
@@ -90,7 +93,7 @@ bool solveNQUtil(int board[N][N], int col)
   
             // Make result true if any placement 
             // is possible 
-            res = solveNQUtil(board, col + 1) || res; 
+            res = solveNQUtil(board, col + 1,TOTAL) || res; 
   
             /* If placing queen in board[i][col] 
             doesn't lead to a solution, then 
@@ -112,19 +115,23 @@ prints placement of queens in the form of 1s.
 Please note that there may be more than one 
 solutions, this function prints one of the 
 feasible solutions.*/
-int solveNQ(int startRow) 
+int solveNQ(int startRow,int sub_row) 
 { 
     int board[N][N]; 
-    TOTAL = 0;
+    int TOTAL = 0;
     memset(board, 0, sizeof(board)); 
     
     //set startRow strict
     board[startRow][0] = 1;
+    if(isSafe(board,sub_row,1)){
+        board[sub_row][1] = 1;
   
-    if (solveNQUtil(board, 1) == false) 
-    { 
-        printf("Solution does not exist"); 
-    } 
+        if (solveNQUtil(board, 2,&TOTAL) == false) 
+        { 
+            printf("Solution does not exist"); 
+        } 
+    }
+
   
     return TOTAL; 
 } 
@@ -145,12 +152,15 @@ int main(int argc, char* argv[])
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
-    
+    if(my_rank!=MASTER){
+        // set max threads for slave nodes
+        omp_set_num_threads (MAXTHREAD);
+    }
 
     //buff save solution
     int node_solution[num_nodes-1] = {0};
     MPI_Request rq[num_nodes-1];
-//     MPI_Request rq_rec[num_nodes-1];
+
     // Master node send the task to idle salve nodes
     if(my_rank==MASTER){
         int total_solution = 0;
@@ -192,6 +202,7 @@ int main(int argc, char* argv[])
                 for(int node=0; node < (num_nodes-1); node++){
                     if(pool[node]==1){
                         MPI_Wait(&rq[node],NULL);
+//                         printf("rec by node %d: %d - %d \n",row,node+1,node_solution[node]);
                         total_solution += node_solution[node];
                     }
                 }
@@ -201,12 +212,17 @@ int main(int argc, char* argv[])
     }
     // slave nodes handle each row
     else{
-        int startRow;
+
         while(1){
+            int startRow;
+            int total=0;
             //receive task from master
             MPI_Recv(&startRow, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            node_solution[0] = solveNQ(startRow); 
-            MPI_Isend(&node_solution[0], 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD,&rq[0]);
+            #pragma omp parallel for schedule(dynamic) reduction(+:total)
+            for(int sub_row=0;sub_row<N;sub_row++){
+                    total += solveNQ(startRow,sub_row); 
+            }
+            MPI_Isend(&total, 1, MPI_INT, MASTER, TAG, MPI_COMM_WORLD,&rq[0]);
             MPI_Wait(&rq[0],NULL); 
         }
     }
