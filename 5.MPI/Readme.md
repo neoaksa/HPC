@@ -6,7 +6,7 @@
 4. Slave node splits task into sub task by iternating each row of the second column in the lattice, which is runing in a dynamic schedule looping. So that each thread can keep busy all time.
 
 ## Validation
-There is a single thread version created named "NQ-Single.cpp". And MPI version named "NQ-MPI".
+There is a single thread version created named "NQ-Single.cpp". And MPI version named "NQ-MPI.cpp".
 
 ## Performance
 
