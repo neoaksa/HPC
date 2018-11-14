@@ -5,6 +5,8 @@
 3. Master node uses non-blocking method(Irecv) to get the feedback from slave node. So that master node is able to check status of all slave nodes as well as receive feedback.
 4. Slave node splits task into sub task by iternating each row of the second column in the lattice, which is runing in a dynamic schedule looping. So that each thread can keep busy all time.
 
+![img](imgs/stra.png)
+
 ## Validation
 There is a single thread version created named "NQ-Single.cpp". And MPI version named "NQ-MPI.cpp".
 
