@@ -19,10 +19,6 @@
 // 20:     39029188884      4878666808       1:10:55.48
 // 21:    314666222712     39333324973       9:24:40.50
 
-
-
-/* C/C++ program to solve N Queen Problem using 
-backtracking */
 #include<bits/stdc++.h> 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,17 +30,8 @@ backtracking */
 #define TAG     0
 #define MAXTHREAD 16
 
-/*// solution number
-// I dont know why it is not work in Openmp even I set it private.
-int TOTAL;*/  
-
   
-/* A utility function to check if a queen can 
-be placed on board[row][col]. Note that this 
-function is called when "col" queens are 
-already placed in columns from 0 to col -1. 
-So we need to check only left side for 
-attacking queens */
+// check if safe position
 bool isSafe(int board[N][N], int row, int col) 
 { 
     int i, j; 
@@ -107,14 +94,7 @@ bool solveNQUtil(int board[N][N], int col, int *TOTAL)
     return res; 
 } 
   
-/* This function solves the N Queen problem using 
-Backtracking. It mainly uses solveNQUtil() to 
-solve the problem. It returns false if queens 
-cannot be placed, otherwise return true and 
-prints placement of queens in the form of 1s. 
-Please note that there may be more than one 
-solutions, this function prints one of the 
-feasible solutions.*/
+// decomposite into subtask in slave node
 int solveNQ(int startRow,int sub_row) 
 { 
     int board[N][N]; 
