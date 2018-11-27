@@ -34,7 +34,7 @@ Three different configurations are set up for performance analysis.
 
 My purpose is finding how speedup we can get from this cluster, and comparing threads and nodes efficiency. 
 
-| Size | Single     | 7 snodes, 6 threads | 6 snodes, 7 theads | Speedup 1 | Speedup 2 |
+| Size | Single     | 7 snodes, 6 threads | 6 snodes, 7 threads | Speedup 1 | Speedup 2 |
 |------|------------|---------------------|--------------------|-----------|-----------|
 | 8    | 791        | 81643               | 72001              | 0.010     | 0.011     |
 | 10   | 17775      | 71692               | 72022              | 0.248     | 0.247     |
@@ -47,3 +47,6 @@ My purpose is finding how speedup we can get from this cluster, and comparing th
 
 When lattice size is small than 14, the elapsed Time is very few and we can't get significant speedup since the computation time on the slave nodes is much less than communication time. But when the lattice size reaches up to 14 or more, we can get 25x-35x speedup since each slave node take enough time to do the sub tasks.
 Also, we can find adding thread in single node is more efficient than adding nodes. The problem is threads are not easy scalable.And the efficiency gap between them are acceptable.
+
+## Improvement
+1. Master node only uses one thread for decompositing task as well as receiving result. Alternatively,We can use two threads to handle them which makes faster.
