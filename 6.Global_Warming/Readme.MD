@@ -4,7 +4,7 @@ Using pyspark to help analysis the situation of global warming. The data is from
 ### Two Stretage
 * Get the max/min temperature and max wind speed only filter mistaken data(9999). Steps are as follows:
   * Load files into RDD: `sc.textFile("/home/DATA/NOAA_weather/{198[0-3],198[5-9]}/*.gz")`
-  * Extract fields from files through map function: `parse_record`
+  * Extract fields from files through map function: `parse_record`, return a key-value(tuple) data.
   * Filter 9999 data: `.filter(lambda x: x[1]!=9999)`
   * reducebyKey to get max or min data ( the key is `year`): `.reduceByKey(lambda x,y: max(x,y)`
   
