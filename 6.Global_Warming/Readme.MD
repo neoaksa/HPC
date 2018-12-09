@@ -68,4 +68,5 @@ I/O is inculded in the chats blew. Compared with single nodes, the cluster with 
 ### Files
 * `infor_extra.py`: main file to execute in spark, output a single csv file in the folder named `output1`
 * `weather_gap.py`: caculate the gap between two decades, export to `output.csv`
+* `weather_overview.twb` and `weather_gap.twb` are two tableau files for visualization.
 * If out of memory or GC error happens, please squeeze the year range in `infor_extra.py`. `rdd = sc.textFile("/home/DATA/NOAA_weather/{198[0-3],198[5-9]}/*.gz")`
