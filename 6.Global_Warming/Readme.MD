@@ -39,6 +39,8 @@ year, max_temp(10x), min_temp(10x), max_wind_speed(10x)
 2008,610,-900,900
 2009,610,-854,900
 ```
+These extreme data maybe happen in special area, like Antarctica or Sahara Desert.
+
 * the average temperature and avg wind speed by year, latitude and longitude
 
 ![img](img/Screenshot_20181209_015445.png)
@@ -54,4 +56,10 @@ Let's create another chat, which shows the temperature difference between two de
 The red color means weather becomes warm, otherwise weather becomes cold. In the most of countries, the red dots are more than cold ones. The most serious area is Europe.
 
 ### Performance 
+I/O is inculded in the chats blew. Compared with single nodes, the cluster with 8 nodes gets 2.8x-5x speedup. The result is not ideal. I guess the I/O and communication take a little bit long time.
 
+![img](img/Screenshot_20181209_023921.png)
+
+### Problem
+* mapreduce performance. It is easy to out of space or memory if there is a poor mapreduce design. In my first stretage, this mapreduce inculds three rdds, which makes it couldn't handle more than three years' files.
+* Sometimes, there are GC error in java if we run 20 years' data at once.
