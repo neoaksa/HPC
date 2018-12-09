@@ -62,4 +62,10 @@ I/O is inculded in the chats blew. Compared with single nodes, the cluster with 
 
 ### Problem
 * mapreduce performance. It is easy to out of space or memory if there is a poor mapreduce design. In my first stretage, this mapreduce inculds three rdds, which makes it couldn't handle more than three years' files.
-* Sometimes, there are GC error in java if we run 20 years' data at once.
+* Sometimes, there are GC error in java if we run 20 years' data at once.Since spark is hight level framework, it's hard to handle errors than MPI.
+* To make the visualization more clear, we can merge the one dot with others around it, like pixel combine.
+
+### Files
+* `infor_extra.py`: main file to execute in spark, output a single csv file in the folder named `output1`
+* `weather_gap.py`: caculate the gap between two decades, export to `output.csv`
+* If out of memory or GC error happens, please squeeze the year range in `infor_extra.py`. `rdd = sc.textFile("/home/DATA/NOAA_weather/{198[0-3],198[5-9]}/*.gz")`
