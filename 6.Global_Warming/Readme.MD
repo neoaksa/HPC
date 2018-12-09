@@ -1,7 +1,7 @@
 ### Purpose
 Using pyspark to help analysis the situation of global warming. The data is from NCDC(http://www.ncdc.noaa.gov/) through 1980 to 1989 and 2000 to 2009(except 1984 and 2004).
 
-### Stretage
+### Two Stretage
 * Get the max/min temperature and max wind speed only filter mistaken data(9999). Steps are as follows:
   * Load files into RDD: `sc.textFile("/home/DATA/NOAA_weather/{198[0-3],198[5-9]}/*.gz")`
   * Extract fields from files through map function: `parse_record`
@@ -16,7 +16,7 @@ Using pyspark to help analysis the situation of global warming. The data is from
 
 
 ### Result and visualization
-* the max/min temperature and max wind speed
+* the max/min temperature and max wind speed(based on stretage 1.)
 ```
 year, max_temp(10x), min_temp(10x), max_wind_speed(10x)
 1980,600,-780,617
@@ -41,7 +41,7 @@ year, max_temp(10x), min_temp(10x), max_wind_speed(10x)
 ```
 These extreme data maybe happen in special area, like Antarctica or Sahara Desert.
 
-* the average temperature and avg wind speed by year, latitude and longitude
+* the average temperature and avg wind speed by year, latitude and longitude(based on stretage 2.)
 
 ![img](img/Screenshot_20181209_015445.png)
 
