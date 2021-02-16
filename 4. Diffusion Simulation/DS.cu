@@ -1,7 +1,8 @@
 /* Diffusion Simulation 
  * nvcc -arch=sm_30 DS.cu -run
  * */
-
+#include "common/book.h"
+#include "common/gpu_anim.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstdlib>
@@ -10,19 +11,51 @@
 #include <sys/time.h>
 // set a 3D volume
 //define the data set size (cubic volume)
-#define DATAXSIZE 128
-#define DATAYSIZE 128
-#define DATAZSIZE 128
+#define DATAXSIZE 256
+#define DATAYSIZE 256
+#define DATAZSIZE 256
 //block size = 8*8*8 = 512
 #define BLKXSIZE 8
 #define BLKYSIZE 8
 #define BLKZSIZE 8
 //time iteration
-#define t 10000
+#define t 1000
 //OpenGL version
-#define DIM 128
+#define DIM 256
 //CPU Validation 
 #define CPUV 0
+// refresh shadow array
+__global__ void refesh(float (*output_array)[DATAYSIZE][DATAXSIZE],
+                          float (*shadow_array)[DATAYSIZE][DATAXSIZE],uchar4 *ptr)
+{
+    unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
+    unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;
+    unsigned int idz = blockIdx.z*blockDim.z + threadIdx.z;
+    // updae shadow and reset barrier
+    if(idz==DATAZSIZE/2){
+            int x = threadIdx.x + blockIdx.x * blockDim.x;
+            int y = threadIdx.y + blockIdx.y * blockDim.y;
+            int offset = x + y * blockDim.x * gridDim.x;
+            if(output_array[idz][idy][idx]>10){
+                ptr[offset].x = 0;
+                ptr[offset].y = 0;
+                ptr[offset].z = 100;
+                ptr[offset].w = 255;}
+            else if(output_array[idz][idy][idx]>1){
+                ptr[offset].x = 100;
+                ptr[offset].y = 0;
+                ptr[offset].z = 100;
+                ptr[offset].w = 255;
+            }else if(output_array[idz][idy][idx]>0.1){
+                ptr[offset].x = 100;
+                ptr[offset].y = 100;
+                ptr[offset].z = 0;
+                ptr[offset].w = 255;
+            }
+        
+    }
+    shadow_array[idz][idy][idx] = output_array[idz][idy][idx];
+}
 
 // device function to set the 3D volume
 __global__ void diffusion(float (*output_array)[DATAYSIZE][DATAXSIZE],
@@ -34,7 +67,16 @@ __global__ void diffusion(float (*output_array)[DATAYSIZE][DATAXSIZE],
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;
     unsigned int idz = blockIdx.z*blockDim.z + threadIdx.z;
-    
+    // unique block id and tid
+    unsigned bid = blockIdx.x 
+                + blockIdx.y*gridDim.x 
+                + blockIdx.z*gridDim.x*gridDim.y;
+//     unsigned tid = idx 
+//                 + (idy * gridDim.x)
+//                 + (idz * gridDim.x * gridDim.y);
+    unsigned tid_in_block = threadIdx.x
+                            + threadIdx.y * blockDim.x
+                            + threadIdx.z * blockDim.y * blockDim.x;
     // not the edge
     if(idx>0 && idx<DATAXSIZE-1 && idy>0 && idy<DATAYSIZE-1 && idz>0 && idz<DATAZSIZE-1){
         output_array[idz][idy][idx] = (shadow_array[idz][idy][idx-1] + shadow_array[idz][idy][idx+1]
@@ -53,16 +95,6 @@ __global__ void diffusion(float (*output_array)[DATAYSIZE][DATAXSIZE],
     }
 }
 
-// refresh shadow array
-__global__ void refesh(float (*output_array)[DATAYSIZE][DATAXSIZE],
-                          float (*shadow_array)[DATAYSIZE][DATAXSIZE])
-{
-    unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
-    unsigned int idy = blockIdx.y*blockDim.y + threadIdx.y;
-    unsigned int idz = blockIdx.z*blockDim.z + threadIdx.z;
-    // updae shadow and reset barrier
-    shadow_array[idz][idy][idx] = output_array[idz][idy][idx];
-}
 
 // cpu version for validation
 void diffusion_cpu(float (*output_array)[DATAYSIZE][DATAXSIZE],
@@ -98,7 +130,7 @@ void diffusion_cpu(float (*output_array)[DATAYSIZE][DATAXSIZE],
     }
 }
 
-int main(int argc, char *argv[])
+void generate_diff(uchar4 *pixels, void*)
 {
     typedef float nRarray[DATAYSIZE][DATAXSIZE];
     // overall data set sizes
@@ -127,18 +159,18 @@ int main(int argc, char *argv[])
     nRarray *shadow_cpu; // for cpu version
     // allocate storage for receiving output
     if ((output_c = (nRarray *)malloc((nx*ny*nz)*sizeof(float))) == 0) {
-		fprintf(stderr,"malloc1 Fail \n"); return 1;
+		fprintf(stderr,"malloc1 Fail \n"); 
 	}
 	// allocate storage for shadow arry
     if ((shadow_c = (nRarray *)malloc((nx*ny*nz)*sizeof(float))) == 0) {
-		fprintf(stderr,"malloc1 Fail \n"); return 1;
+		fprintf(stderr,"malloc1 Fail \n"); 
 	}
     if ((output_cpu = (nRarray *)malloc((nx*ny*nz)*sizeof(float))) == 0) {
-		fprintf(stderr,"malloc1 Fail \n"); return 1;
+		fprintf(stderr,"malloc1 Fail \n"); 
 	}
 	// allocate storage for shadow arry
     if ((shadow_cpu = (nRarray *)malloc((nx*ny*nz)*sizeof(float))) == 0) {
-		fprintf(stderr,"malloc1 Fail \n"); return 1;
+		fprintf(stderr,"malloc1 Fail \n"); 
 	}
     // inital concetration
     for(int k=init_pos[0];k<=init_pos[1];k++)
@@ -183,9 +215,9 @@ int main(int argc, char *argv[])
     // loop with time t
     for(int time=1; time<=t; time++){
         diffusion<<<gridSize,blockSize>>>(output_d,shadow_d);
-        refesh<<<gridSize,blockSize>>>(output_d,shadow_d);
-//     	cudaDeviceSynchronize();
+        refesh<<<gridSize,blockSize>>>(output_d,shadow_d,pixels);
     }
+
     // copy output data back to host
     result = cudaMemcpy(output_c, output_d, ((nx*ny*nz)*sizeof(float)), cudaMemcpyDeviceToHost);
     if (result != cudaSuccess) {
@@ -224,31 +256,40 @@ int main(int argc, char *argv[])
             
         printf("Time spent(GPU) of dt = %d: %f \n",t,elapsed_gpu);	
         printf("Time spent(CPU) of dt = %d: %f \n",t,elapsed_cpu);
+    
+        //write result to file
+        std::ofstream myfile;
+        myfile.open ("DS.csv",std::ios_base::app);
+    //     myfile.open ("DS.csv");
+        for (unsigned i=0; i<nz; i++)
+        for (unsigned j=0; j<ny; j++)
+            for (unsigned k=0; k<nx; k++){
+                if( output_c[i][j][k]!=0)
+                myfile << i << "," << j << "," << k << "," << output_c[i][j][k] << "," << std::to_string(t) << std::endl;
+            }
+        myfile.close();
     }
-    //write result to file
-	std::ofstream myfile;
-	myfile.open ("DS-2.csv",std::ios_base::app);
-//     myfile.open ("DS.csv");
-    for (unsigned i=0; i<nz; i++)
-      for (unsigned j=0; j<ny; j++)
-        for (unsigned k=0; k<nx; k++){
-            if( output_c[i][j][k]!=0)
-            myfile << i << "," << j << "," << k << "," << output_c[i][j][k] << "," << std::to_string(t) << std::endl;
-        }
-	myfile.close();
-	// free memory
-    free(output_c);
-    free(shadow_c);
-    result = cudaFree(shadow_d);
-    if (result != cudaSuccess) {
-		fprintf(stderr, ("Failed to Free device buffer - shadow_d"));
-		exit(1);
-	}
-    result = cudaFree(output_d);
-    if (result != cudaSuccess) {
-		fprintf(stderr, ("Failed to Free device buffer - output_d"));
-		exit(1);
-	}
+// 	// free memory
+//     free(output_c);
+//     free(shadow_c);
+//     result = cudaFree(shadow_d);
+//     if (result != cudaSuccess) {
+// 		fprintf(stderr, ("Failed to Free device buffer - shadow_d"));
+// 		exit(1);
+// 	}
+//     result = cudaFree(output_d);
+//     if (result != cudaSuccess) {
+// 		fprintf(stderr, ("Failed to Free device buffer - output_d"));
+// 		exit(1);
+// 	}
 
+
+}
+
+int main( void ) {
+    GPUAnimBitmap  bitmap( DIM, DIM, NULL );
+
+    bitmap.anim_and_exit(
+        (void (*)(uchar4*,void*))generate_diff, NULL );
     return 0;
 }
